@@ -47,6 +47,55 @@ npm run dev
 
 The UI runs at `http://localhost:5175`.
 
+## Usage
+
+### API Endpoint
+
+The `/analyze` endpoint processes documents and returns results via Server-Sent Events (streaming):
+
+```bash
+curl -X POST http://localhost:8002/analyze
+```
+
+This streams real-time progress as each agent completes:
+- Citation extraction → verification → fact-checking → summary generation
+- The frontend displays progress with spinner + stage details
+- Final report is sent as JSON when complete
+
+### Evaluation
+
+The pipeline includes an eval harness to measure quality against known issues in the test documents.
+
+#### Running Evals
+
+By default, evals run the full pipeline against the LLM (uses API quota):
+
+```bash
+cd backend && python run_evals.py
+```
+
+To use cached results instead (no API calls):
+
+```bash
+cd backend && python run_evals.py --cache
+```
+
+The eval harness measures:
+- **Recall**: What fraction of 5 known issues did the pipeline detect?
+- **Precision**: Of all flags raised, how many correspond to known issues?
+- **Hallucination Rate**: What fraction of high-confidence flags are spurious?
+- **High-confidence flags (>0.9)**: Findings the pipeline is very sure about
+
+Example output:
+```
+Recall (caught known flaws):     100.0% (5/5)
+Precision (no false flags):      38.5%
+Hallucination Rate (bad flags):  0.0% (0 false positives)
+
+Total flags raised: 13
+High-confidence flags (>0.9):   13
+```
+
 ## Challenge Structure
 
 This challenge is designed for foundational engineers at an early startup. We want to see whether you can ship a working AI prototype and also reason about the system it would need to become: reliable, scalable, inspectable, secure, and usable by real legal teams.
